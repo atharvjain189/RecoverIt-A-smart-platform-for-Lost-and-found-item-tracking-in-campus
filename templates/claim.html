@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claim Item - Lost & Found</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f5ff;
+            color: #333;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 40px;
+            background: #1e3a8a;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 22px;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #93c5fd;
+        }
+
+        .user-info {
+            background: #3b82f6;
+            padding: 7px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+
+        .claim-card {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        .claim-card h2 {
+            color: #1e3a8a;
+            margin-bottom: 10px;
+            font-size: 26px;
+        }
+
+        .claim-card p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 15px;
+        }
+
+        .item-summary {
+            background: #f1f5f9;
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .item-summary h4 {
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .item-summary p {
+            margin: 4px 0;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 13px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: 0.3s;
+        }
+
+        .input-group input:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        }
+
+        .input-group textarea {
+            resize: vertical;
+            min-height: 110px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #1e3a8a;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #1e40af;
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            margin-top: 12px;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 12px;
+                padding: 15px;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 12px;
+            }
+
+            .claim-card {
+                padding: 25px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">Lost & Found</div>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('report_lost') }}">Report Lost</a></li>
+            <li><a href="{{ url_for('report_found') }}">Report Found</a></li>
+            <li><a href="{{ url_for('search') }}">Search Items</a></li>
+            <li><a href="{{ url_for('profile') }}" class="user-info">User</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="claim-card">
+            <h2>Claim This Item</h2>
+            <p>Fill the form below to contact the person who reported this item.</p>
+
+            <!-- Item Summary -->
+            <div class="item-summary">
+                <h4>{{ item.title }}</h4>
+                <p>📍 {{ item.location }}</p>
+                <p>📅 {{ item.date }}</p>
+                <p>Status: {{ item.item_type }}</p>
+            </div>
+
+            <form action="{{ url_for('claim', item_id=item.id) }}" method="POST">
+                <div class="input-group">
+                    <label>Your Full Name</label>
+                    <input type="text" name="name" placeholder="Enter your name" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Your Email / Phone</label>
+                    <input type="text" name="contact" placeholder="Enter email or phone number" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Message</label>
+                    <textarea name="message" placeholder="Write a message to the reporter (e.g. I think this is my wallet...)" required></textarea>
+                </div>
+
+                <button type="submit" class="btn">Send Claim Request</button>
+                <a href="{{ url_for('item_details', item_id=item.id) }}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>

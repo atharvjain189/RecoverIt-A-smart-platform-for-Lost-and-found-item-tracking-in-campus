@@ -1,0 +1,22 @@
+.venv/
+__pycache__/
+*.py[cod]
+instance/*.db
+.env
+# Local database
+instance/*.db
+instance/*.sqlite
+instance/*.sqlite3
+
+# Uploaded images
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment and secrets
+.env
+.venv/
+venv/

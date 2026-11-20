@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Lost Item - Lost & Found</title>
+     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f5ff;
+            color: #333;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 40px;
+            background: #1e3a8a;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 22px;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #93c5fd;
+        }
+
+        .user-info {
+            background: #3b82f6;
+            padding: 7px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        /* Form Section */
+        .container {
+            max-width: 650px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .form-card {
+            background: white;
+            padding: 35px 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-card h2 {
+            color: #1e3a8a;
+            margin-bottom: 8px;
+            font-size: 26px;
+        }
+
+        .form-card p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 15px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 13px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: 0.3s;
+            background: #fff;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        }
+
+        .input-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #1e3a8a;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #1e40af;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            margin-top: 12px;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 12px;
+                padding: 15px;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 12px;
+            }
+
+            .form-card {
+                padding: 25px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+     <nav class="navbar">
+        <div class="logo">Lost & Found</div>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('report_lost') }}">Report Lost</a></li>
+            <li><a href="{{ url_for('report_found') }}">Report Found</a></li>
+            <li><a href="{{ url_for('search') }}">Search Items</a></li>
+            <li><a href="{{ url_for('profile') }}" class="user-info">User</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="form-card">
+            <h2>Report Lost Item</h2>
+            <p>Fill the details of the item you have lost.</p>
+
+            <form action="{{ url_for('report_lost') }}" method="POST" enctype="multipart/form-data">
+                <div class="input-group">
+                    <label>Item Name</label>
+                    <input type="text" name="title" placeholder="e.g. Black Wallet, ID Card..." required>
+                </div>
+
+                <div class="input-group">
+                    <label>Category</label>
+                    <select name="category" required>
+                        <option value="">Select Category</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Documents">Documents</option>
+                        <option value="Accessories">Accessories</option>
+                        <option value="Clothing">Clothing</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Location (Where you lost it)</label>
+                    <input type="text" name="location" placeholder="e.g. Library, Canteen, Parking..." required>
+                </div>
+
+                <div class="input-group">
+                    <label>Date Lost</label>
+                    <input type="date" name="date" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Description</label>
+                    <textarea name="description" placeholder="Write any extra details about the item..." required></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label>Upload Image (Optional)</label>
+                    <input type="file" name="image" accept="image/*">
+                </div>
+
+                <button type="submit" class="btn">Submit Lost Item</button>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+
+    
+</body>
+</html>

@@ -1,0 +1,389 @@
+<!-- <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Match notification</title><style>body{font-family:Arial;background:#eff6ff;color:#1e293b;margin:0}.wrap{max-width:850px;margin:30px auto;padding:16px}.card{background:white;padding:22px;border-radius:12px;margin:15px 0;box-shadow:0 4px 15px #0001}input,textarea,button{box-sizing:border-box;width:100%;padding:11px;margin:6px 0;border:1px solid #cbd5e1;border-radius:7px}button{background:#1e3a8a;color:white;cursor:pointer}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.muted{color:#64748b}</style></head><body><div class="wrap"><a href="{{ url_for('dashboard') }}">← Dashboard</a><h1>Possible item match</h1><p>Similarity score: <b>{{ notice.score }}/100</b> · Status: <b>{{ notice.status }}</b></p><div class="row"><section class="card"><h2>Your Lost report</h2><h3>{{ notice.lost_item.title }}</h3><p>{{ notice.lost_item.category }} · {{ notice.lost_item.location }} · {{ notice.lost_item.date }}</p><p>{{ notice.lost_item.description }}</p>{% if notice.lost_item.image %}<img style="max-width:100%" src="{{ url_for('static',filename='uploads/'+notice.lost_item.image) }}">{% endif %}</section><section class="card"><h2>Potential Found item</h2><h3>{{ notice.found_item.title }}</h3><p>{{ notice.found_item.category }} · {{ notice.found_item.location }} · {{ notice.found_item.date }}</p><p>{{ notice.found_item.description }}</p>{% if notice.found_item.image %}<img style="max-width:100%" src="{{ url_for('static',filename='uploads/'+notice.found_item.image) }}">{% endif %}</section></div>{% if not session.get('is_admin') and notice.status == 'Pending' %}<section class="card"><h2>Does this look like your item?</h2><p class="muted">If yes, share details for admin verification. Only provide details needed to arrange safe return.</p><form method="post"><input type="hidden" name="action" value="approve"><label>Full name *</label><input name="owner_name" required><div class="row"><div><label>Phone *</label><input name="owner_phone" required></div><div><label>Email *</label><input name="owner_email" type="email" required></div></div><label>Address / preferred safe handover location *</label><textarea name="owner_address" required></textarea><label>Date of birth (optional)</label><input type="date" name="owner_dob"><button>Approve match and send details to admin</button></form><form method="post" onsubmit="return confirm('Dismiss this possible match?')"><input type="hidden" name="action" value="dismiss"><button style="background:#64748b">Dismiss match</button></form></section>{% elif notice.admin_note %}<section class="card"><h3>Admin note</h3><p>{{ notice.admin_note }}</p></section>{% endif %}</div></body></html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Match Notification</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #eff6ff;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+        }
+
+        .wrap {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        h1 {
+            color: #1e3a8a;
+            margin-top: 22px;
+        }
+
+        h2 {
+            color: #1e40af;
+            margin-top: 0;
+        }
+
+        h3 {
+            color: #334155;
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 14px;
+            margin: 18px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #dbeafe;
+            min-width: 0;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .muted {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .score {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .status {
+            color: #92400e;
+            background: #fef3c7;
+            padding: 6px 10px;
+            border-radius: 6px;
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        .item-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            background: #f8fafc;
+            border-radius: 10px;
+            margin-top: 12px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin: 12px 0 6px;
+            color: #334155;
+        }
+
+        input,
+        textarea,
+        button {
+            font-family: inherit;
+            font-size: 15px;
+            width: 100%;
+            padding: 12px;
+            margin: 6px 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+        }
+
+        input,
+        textarea {
+            background: #ffffff;
+            color: #1e293b;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            background: #1e3a8a;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s ease;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .dismiss-btn {
+            background: #64748b;
+        }
+
+        .dismiss-btn:hover {
+            background: #475569;
+        }
+
+        .form-actions {
+            margin-top: 16px;
+        }
+
+        @media (max-width: 700px) {
+            .wrap {
+                margin: 15px auto;
+                padding: 14px;
+            }
+
+            .row {
+                grid-template-columns: 1fr;
+                gap: 4px;
+            }
+
+            .card {
+                padding: 18px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            h2 {
+                font-size: 21px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+
+        <a href="{{ url_for('dashboard') }}">
+            ← Dashboard
+        </a>
+
+        <h1>Possible Item Match</h1>
+
+        <p>
+            Similarity score:
+            <span class="score">
+                {{ notice.score }}/100
+            </span>
+            &nbsp; Status:
+            <span class="status">
+                {{ notice.status }}
+            </span>
+        </p>
+
+        <div class="row">
+
+            <!-- Lost item details -->
+            <section class="card">
+                <h2>Your Lost Report</h2>
+
+                <h3>{{ notice.lost_item.title }}</h3>
+
+                <p>
+                    <strong>Category:</strong>
+                    {{ notice.lost_item.category }}
+                </p>
+
+                <p>
+                    <strong>Location:</strong>
+                    {{ notice.lost_item.location }}
+                </p>
+
+                <p>
+                    <strong>Date:</strong>
+                    {{ notice.lost_item.date }}
+                </p>
+
+                <p>
+                    {{ notice.lost_item.description }}
+                </p>
+
+                {% if notice.lost_item.image %}
+                    <img
+                        class="item-image"
+                        src="{{ url_for('static', filename='uploads/' + notice.lost_item.image) }}"
+                        alt="Lost item image"
+                    >
+                {% endif %}
+            </section>
+
+            <!-- Found item details shared by admin -->
+            <section class="card">
+                <h2>Potential Found Item</h2>
+
+                <h3>{{ notice.found_item.title }}</h3>
+
+                <p>
+                    <strong>Category:</strong>
+                    {{ notice.found_item.category }}
+                </p>
+
+                <p>
+                    <strong>Location:</strong>
+                    {{ notice.found_item.location }}
+                </p>
+
+                <p>
+                    <strong>Date:</strong>
+                    {{ notice.found_item.date }}
+                </p>
+
+                <p>
+                    {{ notice.found_item.description }}
+                </p>
+
+                {% if notice.found_item.image %}
+                    <img
+                        class="item-image"
+                        src="{{ url_for('static', filename='uploads/' + notice.found_item.image) }}"
+                        alt="Potential found item image"
+                    >
+                {% endif %}
+            </section>
+
+        </div>
+
+        {% if not session.get('is_admin') and notice.status == 'Pending' %}
+
+            <!-- User approves or dismisses the match -->
+            <section class="card">
+                <h2>Does This Look Like Your Item?</h2>
+
+                <p class="muted">
+                    If this appears to be your item, provide the details
+                    below for admin verification. Share only the information
+                    needed to arrange a safe return.
+                </p>
+
+                <form method="post">
+                    <input
+                        type="hidden"
+                        name="action"
+                        value="approve"
+                    >
+
+                    <label for="owner_name">Full Name *</label>
+                    <input
+                        id="owner_name"
+                        type="text"
+                        name="owner_name"
+                        required
+                    >
+
+                    <div class="row">
+
+                        <div>
+                            <label for="owner_phone">Phone *</label>
+                            <input
+                                id="owner_phone"
+                                type="tel"
+                                name="owner_phone"
+                                required
+                            >
+                        </div>
+
+                        <div>
+                            <label for="owner_email">Email *</label>
+                            <input
+                                id="owner_email"
+                                type="email"
+                                name="owner_email"
+                                required
+                            >
+                        </div>
+
+                    </div>
+
+                    <label for="owner_address">
+                        Address / Preferred Safe Handover Location *
+                    </label>
+
+                    <textarea
+                        id="owner_address"
+                        name="owner_address"
+                        required
+                    ></textarea>
+
+                    <label for="owner_dob">
+                        Date of Birth (Optional)
+                    </label>
+
+                    <input
+                        id="owner_dob"
+                        type="date"
+                        name="owner_dob"
+                    >
+
+                    <div class="form-actions">
+                        <button type="submit">
+                            Approve Match and Send Details to Admin
+                        </button>
+                    </div>
+                </form>
+
+                <form
+                    method="post"
+                    onsubmit="return confirm('Dismiss this possible match?')"
+                >
+                    <input
+                        type="hidden"
+                        name="action"
+                        value="dismiss"
+                    >
+
+                    <button type="submit" class="dismiss-btn">
+                        Dismiss Match
+                    </button>
+                </form>
+
+            </section>
+
+        {% elif notice.admin_note %}
+
+            <section class="card">
+                <h3>Admin Note</h3>
+                <p>{{ notice.admin_note }}</p>
+            </section>
+
+        {% endif %}
+
+    </div>
+</body>
+</html>

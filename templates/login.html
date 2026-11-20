@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Lost & Found</title>
+    <style>
+      * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-box {
+            background: white;
+            width: 100%;
+            max-width: 420px;
+            padding: 40px 35px;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .auth-box h2 {
+            text-align: center;
+            color: #1e3a8a;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #1e3a8a;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #1e40af;
+            transform: translateY(-2px);
+        }
+
+        .auth-link {
+            text-align: center;
+            margin-top: 25px;
+            color: #666;
+        }
+
+        .auth-link a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .auth-link a:hover {
+            text-decoration: underline;
+        }
+
+        .back-home {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-home a {
+            color: #1e3a8a;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .auth-box {
+                padding: 30px 25px;
+            }
+
+            .auth-box h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-box">
+        <h2>Login</h2>
+        <form action="{{url_for('login')}}" method="POST">
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" name = "email" placeholder="Enter your email" required>
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" name="password" placeholder="Enter Your Password" required>
+            </div>
+            <button type="submit" class="btn">Login</button>
+            <p class="auth-link">Don't have an account?<a href="{{url_for('register')}}">Register</a></p>
+            <div class="back-home">
+                <a href="{{url_for('home')}}"><- Back to Home</a>
+            </div>
+        </form>
+    </div>
+    
+</body>
+</html>

@@ -1,0 +1,538 @@
+<!-- <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Dashboard</title><style>body{font-family:Arial;background:#f1f5f9;margin:0;color:#1e293b}.nav{background:#172554;color:white;padding:18px 5%;display:flex;justify-content:space-between}a{color:#1d4ed8}.nav a{color:white}main{max-width:1200px;margin:25px auto;padding:0 16px}.card{background:white;padding:18px;margin:14px 0;border-radius:12px;box-shadow:0 4px 16px #0001}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}.btn,button{background:#1e3a8a;color:white;border:0;border-radius:6px;padding:9px 12px;cursor:pointer;text-decoration:none}input,select,textarea{padding:9px;margin:5px 0;max-width:100%;box-sizing:border-box}.flash{padding:10px;background:#dcfce7;border-radius:6px}</style></head><body><nav class="nav"><b>Lost &amp; Found — Admin</b><a href="{{ url_for('admin_logout') }}">Logout</a></nav><main><h1>Admin dashboard</h1><p>Private Found reports, all Lost reports, similarity scoring and handover verification.</p>{% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<p class="flash">{{ message }}</p>{% endfor %}{% endwith %}<h2>All reports</h2><div class="grid">{% for item in items %}<section class="card"><h3>{{ item.title }} <small>({{ item.item_type }})</small></h3><p><b>Owner:</b> {{ item.user.name if item.user else 'Unknown' }} · {{ item.user.email if item.user else '' }}</p><p><b>Category/location/date:</b> {{ item.category }} / {{ item.location }} / {{ item.date }}</p><p>{{ item.description }}</p><p><b>Status:</b> {{ item.status }}</p>{% if item.image %}<img src="{{ url_for('static',filename='uploads/'+item.image) }}" style="max-width:150px;max-height:120px">{% endif %}<p><a href="{{ url_for('item_details',item_id=item.id) }}">Open report</a></p></section>{% endfor %}</div><h2>Possible Lost ↔ Found matches</h2>{% for lost,found,score in matches %}<section class="card"><h3>{{ lost.title }} ↔ {{ found.title }} — {{ score }}/100</h3><p><b>Lost owner:</b> {{ lost.user.name if lost.user else 'Unknown' }} ({{ lost.user.email if lost.user else '' }})</p><p>Lost: {{ lost.category }}, {{ lost.location }} — {{ lost.description }}</p><p>Found: {{ found.category }}, {{ found.location }} — {{ found.description }}</p><form method="post" action="{{ url_for('admin_notify',lost_id=lost.id,found_id=found.id) }}"><button>Send notification to Lost owner</button></form></section>{% else %}<p>No Lost/Found pairs yet.</p>{% endfor %}<h2>Owner responses / verification</h2>{% for n in notices %}<section class="card"><h3>{{ n.lost_item.title }} ↔ {{ n.found_item.title }} ({{ n.score }}/100)</h3><p><b>Status:</b> {{ n.status }}</p>{% if n.owner_name %}<p><b>Owner:</b> {{ n.owner_name }} · {{ n.owner_phone }} · {{ n.owner_email }}</p><p><b>Address:</b> {{ n.owner_address }}</p><p><b>Date of birth:</b> {{ n.owner_dob or 'Not provided' }}</p>{% endif %}<form method="post" action="{{ url_for('admin_match_status',notice_id=n.id) }}"><label>Status</label><select name="status"><option>Follow-up required</option><option>Verified</option><option>Handed Over</option><option>Dismissed</option></select><br><textarea name="admin_note" placeholder="Admin note / follow-up request">{{ n.admin_note or '' }}</textarea><br><button>Update status</button></form></section>{% else %}<p>No notifications sent yet.</p>{% endfor %}</main></body></html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Admin Dashboard</title>
+
+
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+/* Navigation bar */
+.nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 28px;
+    background: #233f8b;
+    color: #ffffff;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.15);
+}
+
+.nav b {
+    font-size: 20px;
+}
+
+.nav a {
+    display: inline-block;
+    padding: 9px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 8px;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background 0.2s ease;
+}
+
+.nav a:hover {
+    background: #ffffff;
+    color: #233f8b;
+}
+
+/* Main content */
+main {
+    width: 100%;
+    max-width: 1250px;
+    margin: 0 auto;
+    padding: 28px;
+    min-width: 0;
+}
+
+h1 {
+    margin-top: 0;
+    color: #172554;
+    font-size: 34px;
+}
+
+h2 {
+    margin-top: 32px;
+    margin-bottom: 16px;
+    color: #1e3a8a;
+    font-size: 25px;
+}
+
+h3 {
+    margin-top: 0;
+    color: #1e40af;
+    font-size: 20px;
+    overflow-wrap: anywhere;
+}
+
+h3 small {
+    color: #64748b;
+    font-size: 14px;
+    font-weight: normal;
+}
+
+p {
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+/* Flash messages */
+.flash {
+    padding: 12px 16px;
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+}
+
+/* Reports grid */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    align-items: stretch;
+}
+
+/* Report and match cards */
+.card {
+    min-width: 0;
+    padding: 22px;
+    background: #ffffff;
+    border: 1px solid #dbe4f0;
+    border-radius: 16px;
+    box-shadow: 0 5px 18px rgba(15, 23, 42, 0.06);
+    margin-bottom: 20px;
+    overflow-wrap: anywhere;
+    transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.11);
+}
+
+/* Make silver/white item images more visible */
+.card img {
+    display: block;
+    width: 100%;
+    max-width: 240px !important;
+    height: 170px !important;
+    object-fit: contain;
+    margin: 18px 0;
+    padding: 12px;
+    background: #e2e8f0;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+}
+
+/* Open report link */
+.card p a {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 11px 20px;
+    background: #233f8b;
+    color: #ffffff;
+    border: 1px solid #233f8b;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.card p a:hover {
+    background: #1b3270;
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+/* Forms and controls */
+.card form {
+    margin-top: 16px;
+}
+
+label {
+    display: block;
+    margin: 12px 0 7px;
+    font-weight: bold;
+    color: #334155;
+}
+
+input,
+select,
+textarea,
+button {
+    max-width: 100%;
+    font: inherit;
+    border-radius: 8px;
+}
+
+select,
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #1e293b;
+}
+
+textarea {
+    min-height: 95px;
+    resize: vertical;
+}
+
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+/* Dashboard action buttons */
+button {
+    padding: 12px 18px;
+    background: #233f8b;
+    color: #ffffff;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+button:hover {
+    background: #1b3270;
+}
+
+button:focus-visible,
+.nav a:focus-visible,
+.card p a:focus-visible {
+    outline: 3px solid #93c5fd;
+    outline-offset: 3px;
+}
+
+/* Responsive layout */
+@media (max-width: 750px) {
+    .grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    main {
+        padding: 20px 16px;
+    }
+
+    .nav {
+        padding: 13px 16px;
+        flex-wrap: wrap;
+    }
+
+    .nav b {
+        font-size: 18px;
+    }
+
+    h1 {
+        font-size: 28px;
+    }
+
+    h2 {
+        font-size: 22px;
+    }
+
+    .card {
+        padding: 18px;
+    }
+}
+
+@media (max-width: 400px) {
+    .nav b {
+        font-size: 16px;
+    }
+
+    .nav a {
+        padding: 8px 12px;
+    }
+
+    .card img {
+        max-width: 100% !important;
+    }
+}
+</style>
+</head>
+
+<body>
+
+    <!-- Navigation bar -->
+    <nav class="nav">
+
+        <b>Lost &amp; Found — Admin</b>
+
+        <a href="{{ url_for('admin_logout') }}">
+            Logout
+        </a>
+
+    </nav>
+
+
+    <!-- Main dashboard content -->
+    <main>
+
+        <h1>Admin dashboard</h1>
+
+        <p>
+            Private Found reports, all Lost reports,
+            similarity scoring and handover verification.
+        </p>
+
+
+        <!-- Flask flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% for category, message in messages %}
+
+                <p class="flash">
+                    {{ message }}
+                </p>
+
+            {% endfor %}
+
+        {% endwith %}
+
+
+        <!-- All reports section -->
+        <h2>All reports</h2>
+
+        <div class="grid">
+
+            {% for item in items %}
+
+                <section class="card">
+
+                    <h3>
+                        {{ item.title }}
+                        <small>({{ item.item_type }})</small>
+                    </h3>
+
+                    <p>
+                        <b>Owner:</b>
+                        {{ item.user.name if item.user else 'Unknown' }}
+                        ·
+                        {{ item.user.email if item.user else '' }}
+                    </p>
+
+                    <p>
+                        <b>Category/location/date:</b>
+                        {{ item.category }}
+                        /
+                        {{ item.location }}
+                        /
+                        {{ item.date }}
+                    </p>
+
+                    <p>
+                        {{ item.description }}
+                    </p>
+
+                    <p>
+                        <b>Status:</b>
+                        {{ item.status }}
+                    </p>
+
+
+                    <!-- Display report image if available -->
+                    {% if item.image %}
+
+                        <img
+                            src="{{ url_for('static', filename='uploads/' + item.image) }}"
+                            style="max-width: 150px; max-height: 120px"
+                            alt="Reported item"
+                        >
+
+                    {% endif %}
+
+
+                    <!-- Open individual report -->
+                    <p>
+                        <a href="{{ url_for('item_details', item_id=item.id) }}">
+                            Open report
+                        </a>
+                    </p>
+
+                </section>
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- Possible Lost and Found matches -->
+        <h2>Possible Lost ↔ Found matches</h2>
+
+        {% for lost, found, score in matches %}
+
+            <section class="card">
+
+                <h3>
+                    {{ lost.title }}
+                    ↔
+                    {{ found.title }}
+                    —
+                    {{ score }}/100
+                </h3>
+
+                <p>
+                    <b>Lost owner:</b>
+                    {{ lost.user.name if lost.user else 'Unknown' }}
+                    ({{ lost.user.email if lost.user else '' }})
+                </p>
+
+                <p>
+                    <b>Lost:</b>
+                    {{ lost.category }},
+                    {{ lost.location }}
+                    —
+                    {{ lost.description }}
+                </p>
+
+                <p>
+                    <b>Found:</b>
+                    {{ found.category }},
+                    {{ found.location }}
+                    —
+                    {{ found.description }}
+                </p>
+
+
+                <!-- Notify the owner about the possible match -->
+                <form
+                    method="post"
+                    action="{{ url_for('admin_notify', lost_id=lost.id, found_id=found.id) }}"
+                >
+
+                    <button type="submit">
+                        Send notification to Lost owner
+                    </button>
+
+                </form>
+
+            </section>
+
+        {% else %}
+
+            <p>No Lost/Found pairs yet.</p>
+
+        {% endfor %}
+
+
+        <!-- Owner responses and verification -->
+        <h2>Owner responses / verification</h2>
+
+        {% for n in notices %}
+
+            <section class="card">
+
+                <h3>
+                    {{ n.lost_item.title }}
+                    ↔
+                    {{ n.found_item.title }}
+                    ({{ n.score }}/100)
+                </h3>
+
+                <p>
+                    <b>Status:</b>
+                    {{ n.status }}
+                </p>
+
+
+                <!-- Display owner details if available -->
+                {% if n.owner_name %}
+
+                    <p>
+                        <b>Owner:</b>
+                        {{ n.owner_name }}
+                        ·
+                        {{ n.owner_phone }}
+                        ·
+                        {{ n.owner_email }}
+                    </p>
+
+                    <p>
+                        <b>Address:</b>
+                        {{ n.owner_address }}
+                    </p>
+
+                    <p>
+                        <b>Date of birth:</b>
+                        {{ n.owner_dob or 'Not provided' }}
+                    </p>
+
+                {% endif %}
+
+
+                <!-- Update match verification status -->
+                <form
+                    method="post"
+                    action="{{ url_for('admin_match_status', notice_id=n.id) }}"
+                >
+
+                    <label>Status</label>
+
+                    <select name="status">
+
+                        <option>Follow-up required</option>
+
+                        <option>Verified</option>
+
+                        <option>Handed Over</option>
+
+                        <option>Dismissed</option>
+
+                    </select>
+
+                    <br>
+
+                    <textarea
+                        name="admin_note"
+                        placeholder="Admin note / follow-up request"
+                    >{{ n.admin_note or '' }}</textarea>
+
+                    <br>
+
+                    <button type="submit">
+                        Update status
+                    </button>
+
+                </form>
+
+            </section>
+
+        {% else %}
+
+            <p>No notifications sent yet.</p>
+
+        {% endfor %}
+
+    </main>
+
+</body>
+
+</html>

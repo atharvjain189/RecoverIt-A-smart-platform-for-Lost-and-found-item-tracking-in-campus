@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item Details - Lost & Found</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f5ff;
+            color: #333;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 40px;
+            background: #1e3a8a;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 22px;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #93c5fd;
+        }
+
+        .user-info {
+            background: #3b82f6;
+            padding: 7px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .details-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            overflow: hidden;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .item-image {
+            flex: 1 1 400px;
+            min-height: 350px;
+        }
+
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .item-content {
+            flex: 1 1 400px;
+            padding: 40px;
+        }
+
+        .item-content h1 {
+            color: #1e3a8a;
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 25px;
+        }
+
+        .status.lost {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .status.found {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .info-row {
+            margin-bottom: 16px;
+            font-size: 16px;
+        }
+
+        .info-row span {
+            font-weight: 600;
+            color: #1e293b;
+            min-width: 120px;
+            display: inline-block;
+        }
+
+        .description {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .description h3 {
+            color: #1e3a8a;
+            margin-bottom: 10px;
+        }
+
+        .description p {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .action-buttons {
+            margin-top: 35px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-primary {
+            background: #1e3a8a;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1e40af;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 12px;
+                padding: 15px;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 12px;
+            }
+
+            .item-content {
+                padding: 25px;
+            }
+
+            .item-content h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+     <nav class="navbar">
+        <div class="logo">Lost & Found</div>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('report_lost') }}">Report Lost</a></li>
+            <li><a href="{{ url_for('report_found') }}">Report Found</a></li>
+            <li><a href="{{ url_for('search') }}">Search Items</a></li>
+            <li><a href="{{ url_for('profile') }}" class="user-info">User</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="details-card">
+            <!-- Image -->
+            <div class="item-image">
+                {% if item.image %}
+                    <img src="{{ url_for('static', filename='uploads/' + item.image) }}" alt="{{ item.title }}">
+                {% else %}
+                    <img src="{{ url_for('static', filename='uploads/bw.jpg') }}" alt="{{ item.title }}">
+                {% endif %}
+            </div>
+
+            <!-- Content -->
+            <div class="item-content">
+                <h1>{{ item.title }}</h1>
+                <span class="status {{ item.item_type|lower }}">{{ item.item_type }}</span>
+
+                <div class="info-row">
+                    <span>Category:</span> {{ item.category }}
+                </div>
+                <div class="info-row">
+                    <span>Location:</span> {{ item.location }}
+                </div>
+                <div class="info-row">
+                    <span>Date:</span> {{ item.date }}
+                </div>
+                <div class="info-row">
+                    <span>Reported by:</span> {{ item.user.name if item.user else 'Unknown' }}
+                </div>
+
+                <div class="description">
+                    <h3>Description</h3>
+                    <p>{{ item.description }}</p>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="{{ url_for('claim', item_id=item.id) }}" class="btn btn-primary">Claim / Contact</a>
+                    <a href="{{ url_for('search') }}" class="btn btn-secondary">Back to Search</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+</html>
